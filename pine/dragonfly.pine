@@ -1,0 +1,170 @@
+// ============================================================================
+// Dragonfly — Narrow Monthly CPR + SuperTrend + MACD Signal
+// ============================================================================
+//
+// LONG signal (ALL must be true):
+//   1. Monthly CPR width < threshold (default 1%)
+//   2. SuperTrend flipped BULLISH within last 0–2 bars
+//   3. MACD(5,13,3) crossover UP on current bar
+//   4. Current bar LOW < monthly Pivot
+//   → Yellow circle + green triangle below bar
+//
+// SHORT signal (ALL must be true):
+//   1. Monthly CPR width < threshold (default 1%)
+//   2. SuperTrend flipped BEARISH within last 0–2 bars
+//   3. MACD(5,13,3) crossunder DOWN on current bar
+//   4. Current bar HIGH > monthly Pivot
+//   → Yellow circle + red triangle above bar
+//
+// EXITS:
+//   T1  : R1 (long) / S1 (short) — purple dotted line, book 50%
+//   Trail SL : SuperTrend line (cyan = bull, purple = bear)
+//
+// ============================================================================
+
+//@version=5
+indicator("Dragonfly", overlay=true, max_labels_count=500, max_lines_count=500)
+
+// ─── INPUTS ───────────────────────────────────────────────────────────────────
+grpCPR = "Monthly CPR"
+cprThreshold = input.float(1.0, "Narrow CPR Threshold (%)", group=grpCPR, step=0.1)
+
+grpST  = "SuperTrend"
+atrLen = input.int(14,    "ATR Period",            group=grpST)
+stMult = input.float(2.0, "SuperTrend Multiplier", group=grpST, step=0.1)
+
+grpMACD = "MACD"
+mFast   = input.int(5,  "Fast",   minval=1, group=grpMACD)
+mSlow   = input.int(13, "Slow",   minval=2, group=grpMACD)
+mSig    = input.int(3,  "Signal", minval=1, group=grpMACD)
+
+grpVis  = "Display"
+showCPR = input.bool(true, "Show Monthly CPR Levels", group=grpVis)
+showST  = input.bool(true, "Show SuperTrend",         group=grpVis)
+
+// ─── MONTHLY CPR ─────────────────────────────────────────────────────────────
+mH = request.security(syminfo.tickerid, "M", high[1],  lookahead=barmerge.lookahead_on)
+mL = request.security(syminfo.tickerid, "M", low[1],   lookahead=barmerge.lookahead_on)
+mC = request.security(syminfo.tickerid, "M", close[1], lookahead=barmerge.lookahead_on)
+
+mPivot = (mH + mL + mC) / 3
+mBC    = (mH + mL) / 2
+mTC    = mPivot + (mPivot - mBC)
+mR1    = 2 * mPivot - mL
+mS1    = 2 * mPivot - mH
+mR2    = mPivot + (mH - mL)
+mS2    = mPivot - (mH - mL)
+
+mWidth   = math.abs(mTC - mBC) / mPivot * 100
+isNarrow = mWidth < cprThreshold
+
+// ─── SUPERTREND ───────────────────────────────────────────────────────────────
+[st, stDir] = ta.supertrend(stMult, atrLen)
+stBull     = stDir < 0
+stBear     = stDir > 0
+stFlipBull = stBull and not stBull[1]
+stFlipBear = stBear and not stBear[1]
+
+stCol = stBull ? color.new(#00FFFF, 0) : color.new(#800080, 0)
+plot(showST ? st : na, "SuperTrend (Trail SL)", color=stCol, linewidth=2, style=plot.style_stepline)
+
+// ─── MACD ─────────────────────────────────────────────────────────────────────
+[macdLine, sigLine, _] = ta.macd(close, mFast, mSlow, mSig)
+macdBull = ta.crossover(macdLine,  sigLine)
+macdBear = ta.crossunder(macdLine, sigLine)
+
+// ─── TRACK LAST ST FLIP ───────────────────────────────────────────────────────
+var int lastBullFlip = na
+var int lastBearFlip = na
+if stFlipBull
+    lastBullFlip := bar_index
+if stFlipBear
+    lastBearFlip := bar_index
+
+// ─── SIGNAL CONDITIONS ───────────────────────────────────────────────────────
+// LONG: narrow CPR + ST flipped bull within 0–2 bars + MACD cross up + low < pivot
+longSig = isNarrow
+        and macdBull
+        and not na(lastBullFlip)
+        and (bar_index - lastBullFlip) <= 2
+        and low < mPivot
+
+// SHORT: narrow CPR + ST flipped bear within 0–2 bars + MACD cross down + high > pivot
+shortSig = isNarrow
+         and macdBear
+         and not na(lastBearFlip)
+         and (bar_index - lastBearFlip) <= 2
+         and high > mPivot
+
+// ─── MONTHLY CPR PLOTS ───────────────────────────────────────────────────────
+plot(showCPR ? mPivot : na, "Pivot", color=color.blue,  linewidth=2)
+plot(showCPR ? mTC    : na, "TC",    color=color.blue,  linewidth=1)
+plot(showCPR ? mBC    : na, "BC",    color=color.blue,  linewidth=1)
+plot(showCPR ? mR1    : na, "R1",    color=color.red,   linewidth=1)
+plot(showCPR ? mS1    : na, "S1",    color=color.green, linewidth=1)
+plot(showCPR ? mR2    : na, "R2",    color=color.red,   linewidth=1, style=plot.style_circles)
+plot(showCPR ? mS2    : na, "S2",    color=color.green, linewidth=1, style=plot.style_circles)
+
+// ─── SIGNAL SHAPES ───────────────────────────────────────────────────────────
+// Long: yellow circle + green triangle below bar
+plotshape(longSig, "Buy Circle",   location=location.belowbar,
+          style=shape.circle,     color=color.new(#FFEB3B, 0), size=size.normal)
+plotshape(longSig, "Buy Triangle", location=location.belowbar,
+          style=shape.triangleup, color=color.new(#00E676, 0), size=size.small)
+
+// Short: yellow circle + red triangle above bar
+plotshape(shortSig, "Sell Circle",   location=location.abovebar,
+          style=shape.circle,       color=color.new(#FFEB3B, 0), size=size.normal)
+plotshape(shortSig, "Sell Triangle", location=location.abovebar,
+          style=shape.triangledown, color=color.new(#FF5252, 0), size=size.small)
+
+// ─── T1 TARGET LINES (purple dotted) ─────────────────────────────────────────
+var line t1Long  = na
+var line t1Short = na
+
+if longSig
+    if not na(t1Long)
+        line.delete(t1Long)
+    t1Long := line.new(bar_index, mR1, bar_index + 60, mR1,
+                       color=color.purple, style=line.style_dotted, width=2)
+    label.new(bar_index, mR1, "T1 (R1)  " + str.tostring(math.round(mR1, 2)),
+              style=label.style_label_right, color=color.purple,
+              textcolor=color.white, size=size.tiny)
+
+if shortSig
+    if not na(t1Short)
+        line.delete(t1Short)
+    t1Short := line.new(bar_index, mS1, bar_index + 60, mS1,
+                        color=color.purple, style=line.style_dotted, width=2)
+    label.new(bar_index, mS1, "T1 (S1)  " + str.tostring(math.round(mS1, 2)),
+              style=label.style_label_right, color=color.purple,
+              textcolor=color.white, size=size.tiny)
+
+// ─── NARROW CPR BACKGROUND ───────────────────────────────────────────────────
+bgcolor(isNarrow ? color.new(color.yellow, 92) : na, title="Narrow Monthly CPR")
+
+// ─── RIGHT-SIDE LABELS ───────────────────────────────────────────────────────
+if barstate.islast and showCPR
+    label.new(bar_index + 2, mPivot, "P "  + str.tostring(mPivot, format.mintick),
+              style=label.style_label_left, color=color.blue,   textcolor=color.white, size=size.tiny)
+    label.new(bar_index + 2, mTC,    "TC " + str.tostring(mTC,   format.mintick),
+              style=label.style_label_left, color=color.blue,   textcolor=color.white, size=size.tiny)
+    label.new(bar_index + 2, mBC,    "BC " + str.tostring(mBC,   format.mintick),
+              style=label.style_label_left, color=color.blue,   textcolor=color.white, size=size.tiny)
+    label.new(bar_index + 2, mR1,    "R1 " + str.tostring(mR1,   format.mintick),
+              style=label.style_label_left, color=color.red,    textcolor=color.white, size=size.tiny)
+    label.new(bar_index + 2, mS1,    "S1 " + str.tostring(mS1,   format.mintick),
+              style=label.style_label_left, color=color.green,  textcolor=color.white, size=size.tiny)
+    label.new(bar_index + 2, mR2,    "R2 " + str.tostring(mR2,   format.mintick),
+              style=label.style_label_left, color=color.red,    textcolor=color.white, size=size.tiny)
+    label.new(bar_index + 2, mS2,    "S2 " + str.tostring(mS2,   format.mintick),
+              style=label.style_label_left, color=color.green,  textcolor=color.white, size=size.tiny)
+    label.new(bar_index + 2, mPivot + math.abs(mTC - mBC) * 3,
+              "Monthly CPR: " + str.tostring(mWidth, "#.###") + "%" + (isNarrow ? "  NARROW" : ""),
+              style=label.style_label_left,
+              color=isNarrow ? color.yellow : color.gray,
+              textcolor=color.black, size=size.small)
+
+// ─── ALERTS ───────────────────────────────────────────────────────────────────
+alertcondition(longSig,  "Dragonfly BUY",  "Dragonfly BUY — narrow monthly CPR, ST bull, MACD up, low < pivot")
+alertcondition(shortSig, "Dragonfly SELL", "Dragonfly SELL — narrow monthly CPR, ST bear, MACD down, high > pivot")

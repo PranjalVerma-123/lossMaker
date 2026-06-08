@@ -1,0 +1,17 @@
+# Ignore specific files
+secret_config.json
+.env
+
+# Ignore entire folders (end with a slash)
+node_modules/
+dist/
+build/
+venv/
+cache/
+output/backtest/
+src/backtest/
+
+# Ignore files by extension (wildcard)
+*.log
+*.tmp
+.DS_Store

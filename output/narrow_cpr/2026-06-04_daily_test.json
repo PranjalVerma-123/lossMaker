@@ -1,0 +1,657 @@
+{
+  "scanDate": "2026-06-04",
+  "type": "Daily-Test",
+  "threshold": "< 0.1%",
+  "totalFound": 27,
+  "bySector": {
+    "IT": [
+      "TECHM"
+    ],
+    "Nifty 50": [
+      "TECHM",
+      "DRREDDY",
+      "RELIANCE",
+      "BPCL",
+      "SBILIFE",
+      "BRITANNIA",
+      "HDFCLIFE",
+      "POWERGRID",
+      "UPL"
+    ],
+    "Other": [
+      "KIMS",
+      "HINDCOPPER",
+      "NUVOCO",
+      "LINDEINDIA",
+      "INDIGOPNTS",
+      "RKFORGE",
+      "RELAXO",
+      "SAPPHIRE",
+      "TIMKEN",
+      "TTKPRESTIG",
+      "LAURUSLABS"
+    ],
+    "Pharma": [
+      "DRREDDY",
+      "AUROPHARMA"
+    ],
+    "Auto": [
+      "BALKRISIND"
+    ],
+    "Midcap 50": [
+      "BALKRISIND",
+      "CONCOR",
+      "M&MFIN",
+      "MFSL"
+    ],
+    "Banking": [
+      "BANDHANBNK"
+    ],
+    "Nifty Next 50": [
+      "BANDHANBNK",
+      "AUROPHARMA",
+      "LICI"
+    ]
+  },
+  "stocks": [
+    {
+      "symbol": "TECHM",
+      "dayClose": 1472.300048828125,
+      "P": 1571.47,
+      "BC": 1571.5,
+      "TC": 1571.43,
+      "R1": 1588.93,
+      "R2": 1606.47,
+      "R3": 1623.93,
+      "S1": 1553.93,
+      "S2": 1536.47,
+      "S3": 1518.93,
+      "widthPct": 0.004,
+      "sectors": [
+        "IT",
+        "Nifty 50"
+      ],
+      "forecast": {
+        "bias": "BEARISH",
+        "change_pct": -2.68,
+        "end_price": 1432.77
+      }
+    },
+    {
+      "symbol": "KIMS",
+      "dayClose": 737.4500122070312,
+      "P": 746.48,
+      "BC": 746.52,
+      "TC": 746.44,
+      "R1": 752.67,
+      "R2": 758.93,
+      "R3": 765.12,
+      "S1": 740.22,
+      "S2": 734.03,
+      "S3": 727.77,
+      "widthPct": 0.011,
+      "sectors": [
+        "Other"
+      ],
+      "forecast": {
+        "bias": "BEARISH",
+        "change_pct": -3.95,
+        "end_price": 708.31
+      }
+    },
+    {
+      "symbol": "HINDCOPPER",
+      "dayClose": 545.4000244140625,
+      "P": 546.28,
+      "BC": 546.33,
+      "TC": 546.24,
+      "R1": 551.57,
+      "R2": 556.93,
+      "R3": 562.22,
+      "S1": 540.92,
+      "S2": 535.63,
+      "S3": 530.27,
+      "widthPct": 0.015,
+      "sectors": [
+        "Other"
+      ],
+      "forecast": {
+        "bias": "BEARISH",
+        "change_pct": -25.71,
+        "end_price": 405.19
+      }
+    },
+    {
+      "symbol": "DRREDDY",
+      "dayClose": 1263.300048828125,
+      "P": 1274.27,
+      "BC": 1274.4,
+      "TC": 1274.13,
+      "R1": 1284.43,
+      "R2": 1294.87,
+      "R3": 1305.03,
+      "S1": 1263.83,
+      "S2": 1253.67,
+      "S3": 1243.23,
+      "widthPct": 0.021,
+      "sectors": [
+        "Pharma",
+        "Nifty 50"
+      ],
+      "forecast": {
+        "bias": "BEARISH",
+        "change_pct": -1.43,
+        "end_price": 1245.29
+      }
+    },
+    {
+      "symbol": "RELIANCE",
+      "dayClose": 1313.199951171875,
+      "P": 1314.23,
+      "BC": 1314.05,
+      "TC": 1314.42,
+      "R1": 1328.17,
+      "R2": 1341.73,
+      "R3": 1355.67,
+      "S1": 1300.67,
+      "S2": 1286.73,
+      "S3": 1273.17,
+      "widthPct": 0.028,
+      "sectors": [
+        "Nifty 50"
+      ],
+      "forecast": {
+        "bias": "BULLISH",
+        "change_pct": 1.41,
+        "end_price": 1331.74
+      }
+    },
+    {
+      "symbol": "BALKRISIND",
+      "dayClose": 2200.39990234375,
+      "P": 2149.67,
+      "BC": 2149.35,
+      "TC": 2149.98,
+      "R1": 2168.33,
+      "R2": 2186.37,
+      "R3": 2205.03,
+      "S1": 2131.63,
+      "S2": 2112.97,
+      "S3": 2094.93,
+      "widthPct": 0.029,
+      "sectors": [
+        "Auto",
+        "Midcap 50"
+      ],
+      "forecast": {
+        "bias": "BULLISH",
+        "change_pct": 3.98,
+        "end_price": 2287.99
+      }
+    },
+    {
+      "symbol": "BANDHANBNK",
+      "dayClose": 207.6199951171875,
+      "P": 206.26,
+      "BC": 206.22,
+      "TC": 206.3,
+      "R1": 209.02,
+      "R2": 211.71,
+      "R3": 214.47,
+      "S1": 203.57,
+      "S2": 200.81,
+      "S3": 198.12,
+      "widthPct": 0.034,
+      "sectors": [
+        "Banking",
+        "Nifty Next 50"
+      ],
+      "forecast": {
+        "bias": "BEARISH",
+        "change_pct": -19.26,
+        "end_price": 167.62
+      }
+    },
+    {
+      "symbol": "BPCL",
+      "dayClose": 292.1000061035156,
+      "P": 294.28,
+      "BC": 294.23,
+      "TC": 294.34,
+      "R1": 297.57,
+      "R2": 300.73,
+      "R3": 304.02,
+      "S1": 291.12,
+      "S2": 287.83,
+      "S3": 284.67,
+      "widthPct": 0.04,
+      "sectors": [
+        "Nifty 50"
+      ],
+      "forecast": {
+        "bias": "BULLISH",
+        "change_pct": 5.09,
+        "end_price": 306.96
+      }
+    },
+    {
+      "symbol": "NUVOCO",
+      "dayClose": 328.6499938964844,
+      "P": 335.95,
+      "BC": 335.88,
+      "TC": 336.03,
+      "R1": 342.05,
+      "R2": 348,
+      "R3": 354.1,
+      "S1": 330,
+      "S2": 323.9,
+      "S3": 317.95,
+      "widthPct": 0.045,
+      "sectors": [
+        "Other"
+      ],
+      "forecast": {
+        "bias": "BEARISH",
+        "change_pct": -2.6,
+        "end_price": 320.12
+      }
+    },
+    {
+      "symbol": "LINDEINDIA",
+      "dayClose": 7110.5,
+      "P": 6936.67,
+      "BC": 6935,
+      "TC": 6938.33,
+      "R1": 7003.33,
+      "R2": 7066.67,
+      "R3": 7133.33,
+      "S1": 6873.33,
+      "S2": 6806.67,
+      "S3": 6743.33,
+      "widthPct": 0.048,
+      "sectors": [
+        "Other"
+      ],
+      "forecast": {
+        "bias": "BEARISH",
+        "change_pct": -6.52,
+        "end_price": 6647.16
+      }
+    },
+    {
+      "symbol": "SBILIFE",
+      "dayClose": 1784.199951171875,
+      "P": 1800.8,
+      "BC": 1800.35,
+      "TC": 1801.25,
+      "R1": 1819.9,
+      "R2": 1838.1,
+      "R3": 1857.2,
+      "S1": 1782.6,
+      "S2": 1763.5,
+      "S3": 1745.3,
+      "widthPct": 0.05,
+      "sectors": [
+        "Nifty 50"
+      ],
+      "forecast": {
+        "bias": "NEUTRAL",
+        "change_pct": 0.19,
+        "end_price": 1787.65
+      }
+    },
+    {
+      "symbol": "CONCOR",
+      "dayClose": 451.8999938964844,
+      "P": 459.7,
+      "BC": 459.82,
+      "TC": 459.58,
+      "R1": 463.9,
+      "R2": 468.35,
+      "R3": 472.55,
+      "S1": 455.25,
+      "S2": 451.05,
+      "S3": 446.6,
+      "widthPct": 0.054,
+      "sectors": [
+        "Midcap 50"
+      ],
+      "forecast": {
+        "bias": "BULLISH",
+        "change_pct": 6.54,
+        "end_price": 481.47
+      }
+    },
+    {
+      "symbol": "INDIGOPNTS",
+      "dayClose": 964.7000122070312,
+      "P": 977.6,
+      "BC": 977.9,
+      "TC": 977.3,
+      "R1": 994.2,
+      "R2": 1011.4,
+      "R3": 1028,
+      "S1": 960.4,
+      "S2": 943.8,
+      "S3": 926.6,
+      "widthPct": 0.061,
+      "sectors": [
+        "Other"
+      ],
+      "forecast": {
+        "bias": "BEARISH",
+        "change_pct": -1.74,
+        "end_price": 947.93
+      }
+    },
+    {
+      "symbol": "M&MFIN",
+      "dayClose": 290.54998779296875,
+      "P": 294.12,
+      "BC": 294.03,
+      "TC": 294.21,
+      "R1": 297.13,
+      "R2": 299.97,
+      "R3": 302.98,
+      "S1": 291.28,
+      "S2": 288.27,
+      "S3": 285.43,
+      "widthPct": 0.062,
+      "sectors": [
+        "Midcap 50"
+      ],
+      "forecast": {
+        "bias": "BEARISH",
+        "change_pct": -1.63,
+        "end_price": 285.82
+      }
+    },
+    {
+      "symbol": "RKFORGE",
+      "dayClose": 554.9000244140625,
+      "P": 569.37,
+      "BC": 569.55,
+      "TC": 569.18,
+      "R1": 577.48,
+      "R2": 585.97,
+      "R3": 594.08,
+      "S1": 560.88,
+      "S2": 552.77,
+      "S3": 544.28,
+      "widthPct": 0.064,
+      "sectors": [
+        "Other"
+      ],
+      "forecast": {
+        "bias": "BEARISH",
+        "change_pct": -1.16,
+        "end_price": 548.48
+      }
+    },
+    {
+      "symbol": "RELAXO",
+      "dayClose": 337.6000061035156,
+      "P": 328.48,
+      "BC": 328.6,
+      "TC": 328.37,
+      "R1": 336.47,
+      "R2": 344.68,
+      "R3": 352.67,
+      "S1": 320.27,
+      "S2": 312.28,
+      "S3": 304.07,
+      "widthPct": 0.071,
+      "sectors": [
+        "Other"
+      ],
+      "forecast": {
+        "bias": "BULLISH",
+        "change_pct": 2.85,
+        "end_price": 347.23
+      }
+    },
+    {
+      "symbol": "BRITANNIA",
+      "dayClose": 5064,
+      "P": 5113.33,
+      "BC": 5111.5,
+      "TC": 5115.17,
+      "R1": 5151.67,
+      "R2": 5186.33,
+      "R3": 5224.67,
+      "S1": 5078.67,
+      "S2": 5040.33,
+      "S3": 5005.67,
+      "widthPct": 0.072,
+      "sectors": [
+        "Nifty 50"
+      ],
+      "forecast": {
+        "bias": "BULLISH",
+        "change_pct": 5.29,
+        "end_price": 5331.77
+      }
+    },
+    {
+      "symbol": "HDFCLIFE",
+      "dayClose": 574.4000244140625,
+      "P": 579.47,
+      "BC": 579.25,
+      "TC": 579.68,
+      "R1": 587.58,
+      "R2": 595.27,
+      "R3": 603.38,
+      "S1": 571.78,
+      "S2": 563.67,
+      "S3": 555.98,
+      "widthPct": 0.075,
+      "sectors": [
+        "Nifty 50"
+      ],
+      "forecast": {
+        "bias": "BULLISH",
+        "change_pct": 19.48,
+        "end_price": 686.29
+      }
+    },
+    {
+      "symbol": "AUROPHARMA",
+      "dayClose": 1440.4000244140625,
+      "P": 1430.27,
+      "BC": 1430.8,
+      "TC": 1429.73,
+      "R1": 1445.43,
+      "R2": 1461.67,
+      "R3": 1476.83,
+      "S1": 1414.03,
+      "S2": 1398.87,
+      "S3": 1382.63,
+      "widthPct": 0.075,
+      "sectors": [
+        "Pharma",
+        "Nifty Next 50"
+      ],
+      "forecast": {
+        "bias": "BEARISH",
+        "change_pct": -22.55,
+        "end_price": 1115.64
+      }
+    },
+    {
+      "symbol": "POWERGRID",
+      "dayClose": 285.04998779296875,
+      "P": 281.93,
+      "BC": 281.82,
+      "TC": 282.04,
+      "R1": 285.47,
+      "R2": 288.78,
+      "R3": 292.32,
+      "S1": 278.62,
+      "S2": 275.08,
+      "S3": 271.77,
+      "widthPct": 0.077,
+      "sectors": [
+        "Nifty 50"
+      ],
+      "forecast": {
+        "bias": "BEARISH",
+        "change_pct": -2.47,
+        "end_price": 278
+      }
+    },
+    {
+      "symbol": "MFSL",
+      "dayClose": 1559.5999755859375,
+      "P": 1596.7,
+      "BC": 1597.35,
+      "TC": 1596.05,
+      "R1": 1610.4,
+      "R2": 1625.4,
+      "R3": 1639.1,
+      "S1": 1581.7,
+      "S2": 1568,
+      "S3": 1553,
+      "widthPct": 0.081,
+      "sectors": [
+        "Midcap 50"
+      ],
+      "forecast": {
+        "bias": "BULLISH",
+        "change_pct": 7.56,
+        "end_price": 1677.53
+      }
+    },
+    {
+      "symbol": "SAPPHIRE",
+      "dayClose": 176.3800048828125,
+      "P": 173.97,
+      "BC": 173.9,
+      "TC": 174.05,
+      "R1": 176.2,
+      "R2": 178.27,
+      "R3": 180.5,
+      "S1": 171.9,
+      "S2": 169.67,
+      "S3": 167.6,
+      "widthPct": 0.084,
+      "sectors": [
+        "Other"
+      ],
+      "forecast": {
+        "bias": "BULLISH",
+        "change_pct": 9.34,
+        "end_price": 192.86
+      }
+    },
+    {
+      "symbol": "LICI",
+      "dayClose": 402.8999938964844,
+      "P": 400.35,
+      "BC": 400.18,
+      "TC": 400.53,
+      "R1": 403.6,
+      "R2": 406.5,
+      "R3": 409.75,
+      "S1": 397.45,
+      "S2": 394.2,
+      "S3": 391.3,
+      "widthPct": 0.087,
+      "sectors": [
+        "Nifty Next 50"
+      ],
+      "forecast": {
+        "bias": "BULLISH",
+        "change_pct": 1.61,
+        "end_price": 409.4
+      }
+    },
+    {
+      "symbol": "TIMKEN",
+      "dayClose": 3491.89990234375,
+      "P": 3526.03,
+      "BC": 3524.45,
+      "TC": 3527.62,
+      "R1": 3552.07,
+      "R2": 3574.93,
+      "R3": 3600.97,
+      "S1": 3503.17,
+      "S2": 3477.13,
+      "S3": 3454.27,
+      "widthPct": 0.09,
+      "sectors": [
+        "Other"
+      ],
+      "forecast": {
+        "bias": "BEARISH",
+        "change_pct": -7.11,
+        "end_price": 3243.73
+      }
+    },
+    {
+      "symbol": "TTKPRESTIG",
+      "dayClose": 544.25,
+      "P": 538.68,
+      "BC": 538.42,
+      "TC": 538.94,
+      "R1": 550.52,
+      "R2": 561.83,
+      "R3": 573.67,
+      "S1": 527.37,
+      "S2": 515.53,
+      "S3": 504.22,
+      "widthPct": 0.096,
+      "sectors": [
+        "Other"
+      ],
+      "forecast": {
+        "bias": "BULLISH",
+        "change_pct": 1.43,
+        "end_price": 552.02
+      }
+    },
+    {
+      "symbol": "LAURUSLABS",
+      "dayClose": 1394.300048828125,
+      "P": 1381.27,
+      "BC": 1380.6,
+      "TC": 1381.93,
+      "R1": 1392.03,
+      "R2": 1401.47,
+      "R3": 1412.23,
+      "S1": 1371.83,
+      "S2": 1361.07,
+      "S3": 1351.63,
+      "widthPct": 0.097,
+      "sectors": [
+        "Other"
+      ],
+      "forecast": {
+        "bias": "BEARISH",
+        "change_pct": -30.78,
+        "end_price": 965.1
+      }
+    },
+    {
+      "symbol": "UPL",
+      "dayClose": 646.0499877929688,
+      "P": 642.28,
+      "BC": 642.6,
+      "TC": 641.97,
+      "R1": 644.57,
+      "R2": 647.48,
+      "R3": 649.77,
+      "S1": 639.37,
+      "S2": 637.08,
+      "S3": 634.17,
+      "widthPct": 0.099,
+      "sectors": [
+        "Nifty 50"
+      ],
+      "forecast": {
+        "bias": "BULLISH",
+        "change_pct": 1.2,
+        "end_price": 653.82
+      }
+    }
+  ]
+}
