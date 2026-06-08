@@ -37,7 +37,7 @@ jobs:
           cache: npm
 
       - name: Install dependencies
-        run: npm ci
+        run: npm install
 
       - name: Syntax check — server entry point
         run: node --check src/server.js
@@ -87,7 +87,7 @@ jobs:
 
             # ── Install dependencies ──
             echo "Installing dependencies..."
-            npm ci --omit=dev
+            npm install --omit=dev
 
             # ── Restart via PM2 ──
             echo "Restarting PM2..."
@@ -103,7 +103,7 @@ jobs:
             if [ "$HTTP_CODE" != "200" ]; then
               echo "Health check FAILED (HTTP $HTTP_CODE) — rolling back to $PREV_COMMIT"
               git reset --hard $PREV_COMMIT
-              npm ci --omit=dev
+              npm install --omit=dev
               pm2 restart ${{ env.PM2_APP }} --update-env
               echo "ROLLBACK_TRIGGERED=true" >> $GITHUB_ENV 2>/dev/null || true
               exit 1
