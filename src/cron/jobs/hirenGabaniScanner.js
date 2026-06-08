@@ -245,6 +245,7 @@ export async function runHirenGabaniScanner() {
     await sendTelegram(msg);
     console.log(`[HirenGabani] Sent: ${s.symbol}`);
   }));
+  
 
   return signals;
 }
