@@ -1,0 +1,136 @@
+name: CI / CD — lossMaker
+
+# ── Triggers ──────────────────────────────────────────────────────────────────
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:          # manual "Run workflow" button in GitHub Actions UI
+    inputs:
+      reason:
+        description: 'Reason for manual deploy'
+        required: false
+        default: 'manual trigger'
+
+# ── Global env ────────────────────────────────────────────────────────────────
+env:
+  NODE_VERSION: '22'
+  APP_DIR: ~/lossMaker
+  PM2_APP: lossMaker
+
+jobs:
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # JOB 1 — CI  (runs on every push, blocks deploy if it fails)
+  # ────────────────────────────────────────────────────────────────────────────
+  ci:
+    name: CI — Lint & Syntax Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Syntax check — server entry point
+        run: node --check src/server.js
+
+      - name: Syntax check — all source files
+        run: |
+          find src -name "*.js" | while read f; do
+            node --check "$f" || exit 1
+          done
+
+  # ────────────────────────────────────────────────────────────────────────────
+  # JOB 2 — Deploy  (only runs if CI passes)
+  # ────────────────────────────────────────────────────────────────────────────
+  deploy:
+    name: CD — Deploy to GCP VM
+    runs-on: ubuntu-latest
+    needs: ci                 # blocks deploy if CI fails
+
+    steps:
+      - name: Deploy, health check & auto-rollback
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.VM_HOST }}
+          username: ${{ secrets.VM_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script_stop: false      # don't auto-stop on error — we handle it manually
+          script: |
+            # load PATH so node / npm / pm2 are available in SSH session
+            export PATH="$HOME/.local/bin:$PATH"
+
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+            echo "  lossMaker deploy — $(date)"
+            echo "  Triggered by: ${{ github.actor }}"
+            echo "  Commit      : ${{ github.sha }}"
+            echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+
+            cd ${{ env.APP_DIR }}
+
+            # ── Save current commit for rollback ──
+            PREV_COMMIT=$(git rev-parse HEAD)
+            echo "Previous commit: $PREV_COMMIT"
+
+            # ── Pull latest code ──
+            echo "Pulling latest code..."
+            git fetch origin main
+            git reset --hard origin/main
+
+            # ── Install dependencies ──
+            echo "Installing dependencies..."
+            npm ci --omit=dev
+
+            # ── Restart via PM2 ──
+            echo "Restarting PM2..."
+            pm2 restart ${{ env.PM2_APP }} --update-env
+
+            # ── Health check — wait for server to be ready ──
+            echo "Running health check..."
+            sleep 4
+            HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3000 || echo "000")
+            echo "Health check response: HTTP $HTTP_CODE"
+
+            # ── Auto-rollback if unhealthy ──
+            if [ "$HTTP_CODE" != "200" ]; then
+              echo "Health check FAILED (HTTP $HTTP_CODE) — rolling back to $PREV_COMMIT"
+              git reset --hard $PREV_COMMIT
+              npm ci --omit=dev
+              pm2 restart ${{ env.PM2_APP }} --update-env
+              echo "ROLLBACK_TRIGGERED=true" >> $GITHUB_ENV 2>/dev/null || true
+              exit 1
+            fi
+
+            echo "Deploy SUCCESS — server healthy (HTTP $HTTP_CODE)"
+
+      # ── Telegram: success ──
+      - name: Notify Telegram — success
+        if: success()
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "chat_id": "${{ secrets.TELEGRAM_CHAT_ID }}",
+              "parse_mode": "HTML",
+              "text": "<b>Deploy SUCCESS</b> — lossMaker\n\nCommit: <code>${{ github.sha }}</code>\nBy: ${{ github.actor }}\nBranch: ${{ github.ref_name }}"
+            }'
+
+      # ── Telegram: failure / rollback ──
+      - name: Notify Telegram — failure
+        if: failure()
+        run: |
+          curl -s -X POST "https://api.telegram.org/bot${{ secrets.TELEGRAM_BOT_TOKEN }}/sendMessage" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "chat_id": "${{ secrets.TELEGRAM_CHAT_ID }}",
+              "parse_mode": "HTML",
+              "text": "<b>Deploy FAILED — rollback triggered</b>\n\nCommit: <code>${{ github.sha }}</code>\nBy: ${{ github.actor }}\nCheck GitHub Actions for logs."
+            }'
