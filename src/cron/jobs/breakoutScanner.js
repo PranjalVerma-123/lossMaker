@@ -38,6 +38,7 @@ import 'dotenv/config';
 import { calcEMA } from '../../services/yFinance/index.js';
 import { NIFTY_100 } from '../../constant/nseStocks.js';
 import { fetchForecast } from '../../api/api.js';
+import { saveSignal } from '../../db/signals.js';
 
 const __dirname  = path.dirname(fileURLToPath(import.meta.url));
 const OUTPUT_DIR = path.join(__dirname, '..', '..', '..', 'output', 'scanner');
@@ -349,12 +350,35 @@ async function saveAndNotify(result, today, regime, signals) {
     return;
   }
 
-  // Send one message per signal as soon as its forecast arrives
+  // Send one message per signal as soon as its forecast arrives + save to DB
   await Promise.all(signals.map(async (s) => {
     const forecast = await fetchForecast(s.symbol, 'stock_nse').catch(() => null);
     const msg = formatSignalMessage(s, today, regime, forecast);
     await sendTelegram(msg);
     console.log(`[Breakout] Sent: ${s.symbol}`);
+
+    const saved = saveSignal({
+      scanner:               'breakout',
+      symbol:                s.symbol,
+      signal_date:           today,
+      trade_type:            'LONG',
+      entry_type:            'AUTO',
+      sl:                    s.suggestedSL,
+      t1:                    null,   // calculated from actual entry next day
+      t2:                    null,
+      risk_pct:              5,
+      signal_close:          s.close,
+      forecast_bias:         forecast?.bias              ?? null,
+      forecast_target:       forecast?.end_price         ?? null,
+      forecast_change_pct:   forecast?.change_pct        ?? null,
+      forecast_peak:         forecast?.peak              ?? null,
+      forecast_trough:       forecast?.trough            ?? null,
+      forecast_upside_pct:   forecast?.upside_pct        ?? null,
+      forecast_downside_pct: forecast?.downside_pct      ?? null,
+      nifty_close:           regime.close,
+      meta: { breakoutPct: s.breakoutPct, rsi: s.rsi, volMultiple: s.volMultiple, distEma50Pct: s.distEma50Pct },
+    });
+    if (!saved.duplicate) console.log(`[Breakout] Saved DB id=${saved.id}`);
   }));
 }
 

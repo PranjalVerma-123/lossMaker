@@ -20,6 +20,7 @@ import 'dotenv/config';
 import { downloadOHLC, downloadBatch, calcEMA, calcCPR } from '../../services/yFinance/index.js';
 import { ALL_OPTION_STOCKS }                             from '../../constant/nseStocks.js';
 import { fetchForecast } from '../../api/api.js';
+import { saveSignal }    from '../../db/signals.js';
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const CHAT_ID   = process.env.TELEGRAM_CHAT_ID;
@@ -315,12 +316,37 @@ export async function runConfluenceV2Scanner() {
     return signals;
   }
 
-  // Send one message per signal as soon as its forecast arrives
+  // Send one message per signal as soon as its forecast arrives + save to DB
   await Promise.all(signals.map(async (s) => {
     const forecast = await fetchForecast(s.symbol, 'stock_nse').catch(() => null);
     const msg = formatSignalMessage(s, scanDate, regimeBull, forecast);
     await sendTelegram(msg);
     console.log(`[ConfluenceV2] Sent: ${s.symbol}`);
+
+    const saved = saveSignal({
+      scanner:               'confluence_v2',
+      symbol:                s.symbol,
+      signal_date:           scanDate,
+      trade_type:            'LONG',
+      entry_type:            'BUY_STOP',
+      entry_trigger:         s.stopEntry,
+      sl:                    s.sl,
+      t1:                    s.t1,    // 2R
+      t2:                    s.t2,    // 4R
+      risk_pct:              s.riskPct,
+      signal_close:          s.close,
+      signal_high:           s.stopEntry,
+      signal_low:            s.sl,
+      forecast_bias:         forecast?.bias              ?? null,
+      forecast_target:       forecast?.end_price         ?? null,
+      forecast_change_pct:   forecast?.change_pct        ?? null,
+      forecast_peak:         forecast?.peak              ?? null,
+      forecast_trough:       forecast?.trough            ?? null,
+      forecast_upside_pct:   forecast?.upside_pct        ?? null,
+      forecast_downside_pct: forecast?.downside_pct      ?? null,
+      meta: { pattern: s.pattern, confluences: s.confluences, rsi: s.rsi, volDryPct: s.volDryPct, cprP: s.cprP },
+    });
+    if (!saved.duplicate) console.log(`[ConfluenceV2] Saved DB id=${saved.id}`);
   }));
 
   return signals;

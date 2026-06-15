@@ -21,6 +21,7 @@ import { downloadBatch, calcEMA } from '../../services/yFinance/index.js';
 import { ALL_OPTION_STOCKS }      from '../../constant/nseStocks.js';
 import 'dotenv/config';
 import { fetchForecast } from '../../api/api.js';
+import { saveSignal }    from '../../db/signals.js';
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const CHAT_ID   = process.env.TELEGRAM_CHAT_ID;
@@ -238,12 +239,37 @@ export async function runHirenGabaniScanner() {
     return signals;
   }
 
-  // Send one message per signal as soon as its forecast arrives
+  // Send one message per signal as soon as its forecast arrives + save to DB
   await Promise.all(signals.map(async (s) => {
     const forecast = await fetchForecast(s.symbol, 'stock_nse').catch(() => null);
     const msg = formatSignalMessage(s, scanDate, forecast);
     await sendTelegram(msg);
     console.log(`[HirenGabani] Sent: ${s.symbol}`);
+
+    const saved = saveSignal({
+      scanner:               'hiren_gabani',
+      symbol:                s.symbol,
+      signal_date:           scanDate,
+      trade_type:            'LONG',
+      entry_type:            'BUY_STOP',
+      entry_trigger:         s.stopEntry,
+      sl:                    s.sl,
+      t1:                    s.t2r,    // 2R → SL to breakeven
+      t2:                    s.t4r,    // 4R → 1/3 exit
+      risk_pct:              s.riskPct,
+      signal_close:          s.close,
+      signal_high:           s.stopEntry,
+      signal_low:            s.sl,
+      forecast_bias:         forecast?.bias              ?? null,
+      forecast_target:       forecast?.end_price         ?? null,
+      forecast_change_pct:   forecast?.change_pct        ?? null,
+      forecast_peak:         forecast?.peak              ?? null,
+      forecast_trough:       forecast?.trough            ?? null,
+      forecast_upside_pct:   forecast?.upside_pct        ?? null,
+      forecast_downside_pct: forecast?.downside_pct      ?? null,
+      meta: { pbPct: s.pbPct, nearEMA: s.nearEMA, volRatio: s.volRatio, t1r: s.t1r },
+    });
+    if (!saved.duplicate) console.log(`[HirenGabani] Saved DB id=${saved.id}`);
   }));
 
   return signals;

@@ -15,6 +15,7 @@ import 'dotenv/config';
 import { downloadBatch, resampleWeekly } from '../../services/yFinance/index.js';
 import { ALL_OPTION_STOCKS } from '../../constant/nseStocks.js';
 import { fetchForecast } from '../../api/api.js';
+import { saveSignal }    from '../../db/signals.js';
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const CHAT_ID   = process.env.TELEGRAM_CHAT_ID;
@@ -232,12 +233,36 @@ export async function runMTFScanner() {
     return signals;
   }
 
-  // Send one message per signal as soon as its forecast arrives
+  // Send one message per signal as soon as its forecast arrives + save to DB
   await Promise.all(signals.map(async (s) => {
     const forecast = await fetchForecast(s.symbol, 'stock_nse').catch(() => null);
     const msg = formatSignalMessage(s, scanDate, forecast);
     await sendTelegram(msg);
     console.log(`[MTF] Sent: ${s.symbol} (${s.type})`);
+
+    const saved = saveSignal({
+      scanner:               'mtf',
+      symbol:                s.symbol,
+      signal_date:           scanDate,
+      trade_type:            s.type,          // LONG or SHORT
+      entry_type:            'AUTO',           // next day open near MSS
+      sl:                    s.sl,
+      t1:                    s.t1,
+      t2:                    s.t2,
+      risk_pct:              s.riskPct,
+      signal_close:          s.close,
+      signal_high:           s.sigHigh,
+      signal_low:            s.sigLow,
+      forecast_bias:         forecast?.bias              ?? null,
+      forecast_target:       forecast?.end_price         ?? null,
+      forecast_change_pct:   forecast?.change_pct        ?? null,
+      forecast_peak:         forecast?.peak              ?? null,
+      forecast_trough:       forecast?.trough            ?? null,
+      forecast_upside_pct:   forecast?.upside_pct        ?? null,
+      forecast_downside_pct: forecast?.downside_pct      ?? null,
+      meta: { pwh: s.pwh, pwl: s.pwl, rr: s.rr },
+    });
+    if (!saved.duplicate) console.log(`[MTF] Saved DB id=${saved.id}`);
   }));
 
   return signals;

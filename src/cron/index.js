@@ -4,11 +4,18 @@ import { runScanner }               from './jobs/breakoutScanner.js';
 import { runMTFScanner }            from './jobs/mtfScanner.js';
 import { runHirenGabaniScanner }    from './jobs/hirenGabaniScanner.js';
 import { runConfluenceV2Scanner }   from './jobs/confluenceV2Scanner.js';
+import { runSignalTracker }         from './jobs/signalTracker.js';
 
 const TZ = { timezone: 'Asia/Kolkata' };
 
 export function startCronJobs() {
   registerNarrowCprJobs();
+
+  // Signal tracker — 4:05 PM IST (after market close, before scanners)
+  cron.schedule('05 16 * * 1-5', () => {
+    console.log('[Cron] Running signal tracker...');
+    runSignalTracker().catch(console.error);
+  }, TZ);
 
   // Breakout scanner — 4:30 PM IST, Mon–Fri
   cron.schedule('30 16 * * 1-5', () => {
