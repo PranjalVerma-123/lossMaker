@@ -123,18 +123,33 @@ async function sendTelegram(message) {
   }
 }
 
-function buildTelegramMessage(type, cprFor, narrow, bySector) {
-  if (!narrow.length) return null;
+function buildTelegramMessage(type, cprFor, narrow) {
+  // Only include stocks where forecast confirms direction
+  const bullish = narrow.filter(s => s.forecast?.bias === 'BULLISH');
+  const bearish = narrow.filter(s => s.forecast?.bias === 'BEARISH');
+
+  if (!bullish.length && !bearish.length) return null;
+
   let msg = `<b>Narrow CPR — ${type} | CPR for: ${cprFor}</b>\n`;
-  msg += `<b>${narrow.length}</b> stock(s) with CPR width &lt; ${THRESHOLD}%\n\n`;
-  for (const [sector, symbols] of Object.entries(bySector)) {
-    const stocks = narrow.filter(s => s.sectors.includes(sector));
-    msg += `<b>${sector}</b> (${symbols.length})\n`;
-    for (const s of stocks) {
-      msg += `  ${s.symbol} — P: ${s.P}  BC: ${s.BC}  TC: ${s.TC}  Width: ${s.widthPct}%\n`;
+  msg += `Forecast-confirmed signals only\n\n`;
+
+  if (bullish.length) {
+    msg += `<b>▲ LONG (Forecast: BULLISH) — ${bullish.length} stock(s)</b>\n`;
+    for (const s of bullish) {
+      msg += `  <b>${s.symbol}</b> — P: ${s.P}  BC: ${s.BC}  TC: ${s.TC}  Width: ${s.widthPct}%\n`;
+      msg += `    Forecast → Target: ₹${s.forecast.end_price}  (${s.forecast.change_pct >= 0 ? '+' : ''}${s.forecast.change_pct}%)\n`;
     }
     msg += '\n';
   }
+
+  if (bearish.length) {
+    msg += `<b>▼ SHORT (Forecast: BEARISH) — ${bearish.length} stock(s)</b>\n`;
+    for (const s of bearish) {
+      msg += `  <b>${s.symbol}</b> — P: ${s.P}  BC: ${s.BC}  TC: ${s.TC}  Width: ${s.widthPct}%\n`;
+      msg += `    Forecast → Target: ₹${s.forecast.end_price}  (${s.forecast.change_pct >= 0 ? '+' : ''}${s.forecast.change_pct}%)\n`;
+    }
+  }
+
   return msg;
 }
 
@@ -243,7 +258,7 @@ async function scan(type, extractCPR, period, cprFor) {
   const filepath = saveJSON(filename, result);
   console.log(`[NarrowCPR] ${type} — ${narrow.length} stocks found, CPR for: ${cprFor}, saved: ${filepath}`);
 
-  const msg = buildTelegramMessage(type, cprFor, narrow, bySector);
+  const msg = buildTelegramMessage(type, cprFor, narrow);
   if (msg) {
     await sendTelegram(msg);
   } else {

@@ -5,6 +5,7 @@ import { runMTFScanner }            from './jobs/mtfScanner.js';
 import { runHirenGabaniScanner }    from './jobs/hirenGabaniScanner.js';
 import { runConfluenceV2Scanner }   from './jobs/confluenceV2Scanner.js';
 import { runSignalTracker }         from './jobs/signalTracker.js';
+import { runMonthlyCprZoneScanner } from './jobs/monthlyCprZoneScanner.js';
 
 const TZ = { timezone: 'Asia/Kolkata' };
 
@@ -17,8 +18,8 @@ export function startCronJobs() {
     runSignalTracker().catch(console.error);
   }, TZ);
 
-  // Breakout scanner — 4:30 PM IST, Mon–Fri
-  cron.schedule('30 16 * * 1-5', () => {
+  // Breakout scanner — 3:15 PM IST, Mon–Fri (alert before close so you can buy today)
+  cron.schedule('15 15 * * 1-5', () => {
     console.log('[Cron] Running breakout scanner...');
     runScanner().catch(console.error);
   }, TZ);
@@ -39,6 +40,12 @@ export function startCronJobs() {
   cron.schedule('15 17 * * 1-5', () => {
     console.log('[Cron] Running Confluence V2 scanner...');
     runConfluenceV2Scanner().catch(console.error);
+  }, TZ);
+
+  // Monthly CPR Zone scanner — 4:20 PM IST, Mon–Fri
+  cron.schedule('20 16 * * 1-5', () => {
+    console.log('[Cron] Running monthly CPR zone scanner...');
+    runMonthlyCprZoneScanner().catch(console.error);
   }, TZ);
 
   console.log('[Cron] All jobs registered');

@@ -12,6 +12,8 @@ import {
   calcCPR,
 } from '../../services/yFinance/index.js';
 
+import { saveSignal } from '../../db/signals.js';
+
 import {
   ALL_OPTION_STOCKS,
   BANK_NIFTY,
@@ -39,6 +41,14 @@ const SECTORS = {
 
 const MIN_CLOSE        = 50;
 const MIN_AVG_TURNOVER = 1e8;
+
+function nextTradingDay(from = new Date()) {
+  const d = new Date(from);
+  d.setDate(d.getDate() + 1);
+  if (d.getDay() === 6) d.setDate(d.getDate() + 2);
+  if (d.getDay() === 0) d.setDate(d.getDate() + 1);
+  return d.toISOString().slice(0, 10);
+}
 
 function getSectorTags(symbol) {
   const tags = [];
@@ -124,7 +134,15 @@ async function testDailyCPR() {
 
     const cpr = calcCPR(prev.high, prev.low, prev.close);
     if (cpr.widthPct < THRESHOLD) {
-      narrow.push({ symbol, dayClose: bars[bars.length - 1].close, ...cpr, sectors: getSectorTags(symbol) });
+      narrow.push({
+        symbol,
+        dayClose:  bars[bars.length - 1].close,
+        prevHigh:  prev.high,
+        prevLow:   prev.low,
+        prevClose: prev.close,
+        ...cpr,
+        sectors: getSectorTags(symbol),
+      });
     }
   }
 
@@ -138,6 +156,50 @@ async function testDailyCPR() {
   }
 
   narrow.sort((a, b) => a.widthPct - b.widthPct);
+
+  // ── Save signals to DB ────────────────────────────────────────────────────
+  const signalDate = nextTradingDay();
+  let saved = 0, dupes = 0;
+
+  for (const stock of narrow) {
+    const bias      = stock.forecast?.bias ?? null;
+    const tradeType = bias === 'BEARISH' ? 'SHORT' : 'LONG';
+
+    const sl = tradeType === 'LONG'  ? stock.BC : stock.TC;
+    const t1 = tradeType === 'LONG'  ? stock.R1 : stock.S1;
+    const t2 = tradeType === 'LONG'  ? stock.R2 : stock.S2;
+
+    const res = saveSignal({
+      scanner:              'NARROW_CPR_DAILY',
+      symbol:               stock.symbol,
+      signal_date:          signalDate,
+      trade_type:           tradeType,
+      entry_type:           'AUTO',
+      entry_trigger:        stock.P,
+      sl,
+      t1,
+      t2,
+      signal_close:         stock.prevClose,
+      signal_high:          stock.prevHigh,
+      signal_low:           stock.prevLow,
+      forecast_bias:        bias,
+      forecast_target:      stock.forecast?.end_price      ?? null,
+      forecast_change_pct:  stock.forecast?.change_pct     ?? null,
+      forecast_peak:        stock.forecast?.peak           ?? null,
+      forecast_trough:      stock.forecast?.trough         ?? null,
+      forecast_upside_pct:  stock.forecast?.upside_pct     ?? null,
+      forecast_downside_pct:stock.forecast?.downside_pct   ?? null,
+      meta: {
+        P: stock.P, BC: stock.BC, TC: stock.TC,
+        widthPct: stock.widthPct,
+        sectors:  stock.sectors,
+      },
+    });
+
+    if (res.duplicate) dupes++; else saved++;
+  }
+
+  console.log(`[TEST-DailyCPR] Signals saved: ${saved}, duplicates skipped: ${dupes}`);
 
   const bySector = groupBySector(narrow);
 

@@ -36,7 +36,7 @@ import axios from 'axios';
 import 'dotenv/config';
 
 import { calcEMA } from '../../services/yFinance/index.js';
-import { NIFTY_100 } from '../../constant/nseStocks.js';
+import { ALL_OPTION_STOCKS } from '../../constant/nseStocks.js';
 import { fetchForecast } from '../../api/api.js';
 import { saveSignal } from '../../db/signals.js';
 
@@ -94,7 +94,7 @@ function calcVolSMA(volumes, period) {
 }
 
 // ── Fetch & enrich bars ───────────────────────────────────────────────────────
-async function fetchEnriched(ticker) {
+async function fetchEnriched(ticker, isIndex = false) {
   const now   = new Date();
   const start = new Date(now);
   start.setFullYear(start.getFullYear() - 1); // 1 year for breakout lookback
@@ -104,7 +104,7 @@ async function fetchEnriched(ticker) {
     if (!result?.quotes?.length) return [];
 
     const bars = result.quotes
-      .filter(q => q.close != null && q.open != null && q.high != null && q.low != null && q.volume > 0)
+      .filter(q => q.close != null && q.open != null && q.high != null && q.low != null && (isIndex || q.volume > 0))
       .map(q => ({
         date:   q.date,
         open:   q.open,
@@ -191,7 +191,7 @@ function checkSignal(bars) {
 
 // ── Check Nifty market regime ─────────────────────────────────────────────────
 async function checkNiftyRegime() {
-  const bars = await fetchEnriched('^NSEI');
+  const bars = await fetchEnriched('^NSEI', true);
   if (bars.length < 25) return { bullish: false, reason: 'Insufficient data' };
 
   const last = bars[bars.length - 1];
@@ -232,8 +232,8 @@ function formatSignalMessage(s, today, regime, forecast) {
   msg += `  Breakout       : +${s.breakoutPct}% above 20d high  (prev: ₹${s.prevHigh})\n`;
   msg += `  Volume         : ${s.volMultiple}x avg  |  RSI: ${s.rsi}\n`;
   msg += `  50 EMA dist    : +${s.distEma50Pct}%\n`;
-  msg += `  Entry          : tomorrow's open\n`;
-  msg += `  SL             : 5% below open (~₹${s.suggestedSL})\n`;
+  msg += `  Entry          : buy before 3:30 PM today OR tomorrow's open\n`;
+  msg += `  SL             : 5% below entry (~₹${s.suggestedSL})\n`;
   msg += `  T1 (+10%)      : scale 50% out, SL to breakeven\n`;
   msg += `  T2 (+20%)      : full exit (or close below 20 EMA)\n`;
 
@@ -257,7 +257,7 @@ async function runScanner() {
 
   console.log(`\n${'═'.repeat(68)}`);
   console.log(`  BREAKOUT SCANNER  —  ${today}`);
-  console.log(`  Universe: Nifty 100 (${NIFTY_100.length} stocks)`);
+  console.log(`  Universe: ALL_OPTION_STOCKS (${ALL_OPTION_STOCKS.length} stocks)`);
   console.log(`  Signal  : Close ≥1% above 20-day high | Volume ≥1.5x | RSI 50-75`);
   console.log(`${'═'.repeat(68)}\n`);
 
@@ -277,8 +277,8 @@ async function runScanner() {
   const signals = [];
   console.log('\n  Scanning stocks...\n');
 
-  for (let i = 0; i < NIFTY_100.length; i += CONCURRENCY) {
-    const batch = NIFTY_100.slice(i, i + CONCURRENCY);
+  for (let i = 0; i < ALL_OPTION_STOCKS.length; i += CONCURRENCY) {
+    const batch = ALL_OPTION_STOCKS.slice(i, i + CONCURRENCY);
     const results = await Promise.all(batch.map(async (symbol) => {
       try {
         const bars = await fetchEnriched(`${symbol}.NS`);
@@ -287,7 +287,7 @@ async function runScanner() {
       } catch { return null; }
     }));
     for (const r of results) if (r) signals.push(r);
-    process.stdout.write(`\r  Scanned ${Math.min(i + CONCURRENCY, NIFTY_100.length)}/${NIFTY_100.length} stocks... ${signals.length} signal(s) found so far`);
+    process.stdout.write(`\r  Scanned ${Math.min(i + CONCURRENCY, ALL_OPTION_STOCKS.length)}/${ALL_OPTION_STOCKS.length} stocks... ${signals.length} signal(s) found so far`);
   }
 
   process.stdout.write('\r' + ' '.repeat(70) + '\r');
@@ -313,8 +313,8 @@ async function runScanner() {
     }
 
     console.log(`\n  HOW TO TRADE:`);
-    console.log(`  • Enter at TOMORROW'S OPEN for each signal`);
-    console.log(`  • SL: 5% below entry (not the SuggestedSL above — recalculate from actual open)`);
+    console.log(`  • Buy before 3:30 PM today OR at tomorrow's open`);
+    console.log(`  • SL: 5% below entry (recalculate from actual fill price)`);
     console.log(`  • Target 1: +10% — exit 50%, move SL to breakeven`);
     console.log(`  • Target 2: +20% OR close below 20 EMA — exit remaining`);
     console.log(`  • Max 4 stocks at once | 25% capital each`);
@@ -353,9 +353,15 @@ async function saveAndNotify(result, today, regime, signals) {
   // Send one message per signal as soon as its forecast arrives + save to DB
   await Promise.all(signals.map(async (s) => {
     const forecast = await fetchForecast(s.symbol, 'stock_nse').catch(() => null);
-    const msg = formatSignalMessage(s, today, regime, forecast);
-    await sendTelegram(msg);
-    console.log(`[Breakout] Sent: ${s.symbol}`);
+
+    // Only alert if forecast confirms LONG direction
+    if (forecast?.bias !== 'BULLISH') {
+      console.log(`[Breakout] Skipped Telegram for ${s.symbol} — forecast: ${forecast?.bias ?? 'unavailable'}`);
+    } else {
+      const msg = formatSignalMessage(s, today, regime, forecast);
+      await sendTelegram(msg);
+      console.log(`[Breakout] Sent: ${s.symbol}`);
+    }
 
     const saved = saveSignal({
       scanner:               'breakout',
